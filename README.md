@@ -1,198 +1,78 @@
-# وثيقة معماريّة GetX في تطبيق Belle
+# Use Case Diagram - Belle Beauty Salon
 
-## مقدمة
-
-يتبع هذا التطبيق نموذج GetX المعتاد في Flutter، حيث يتم تقسيم التطبيق إلى:
-
-- Controllers: إدارة المنطق والـ state
-- Views: عناصر الواجهة
-- Models: تمثيل البيانات
-- Bindings: تسجيل الكائنات المدارة
-- Routes: توجيه الانتقال بين الصفحات
-- Services: التعامل مع الخادم
-
-## 1) مخطط العمارة المنطقية
-
-هذا المخطط يوضح كيف تقسم البنية التطبيق إلى طبقات واضحة وتعمل معاً داخل GetX.
-
-```mermaid
-flowchart TB
-    subgraph UI[Views]
-        V1[Auth Screens]
-        V2[Home Screens]
-        V3[Booking Screens]
-        V4[Profile Screens]
-        V5[Admin Screens]
-    end
-
-    subgraph STATE[Controllers]
-        C1[AuthController]
-        C2[HomeController]
-        C3[BookingController]
-        C4[FavoriteController]
-        C5[AdminController]
-    end
-
-    subgraph DATA[Models]
-        M1[UserModel]
-        M2[ServiceModel]
-        M3[CategoryModel]
-        M4[AppointmentModel]
-    end
-
-    subgraph INFRA[Infrastructure]
-        B[Bindings]
-        R[Routes / AppPages]
-        S[ApiService]
-        A[Backend API]
-    end
-
-    V1 --> C1
-    V2 --> C2
-    V3 --> C3
-    V4 --> C4
-    V5 --> C5
-
-    C1 --> M1
-    C2 --> M2
-    C3 --> M2
-    C4 --> M2
-    C5 --> M3
-
-    B --> C1
-    B --> C2
-    B --> C3
-    B --> C4
-    B --> C5
-
-    R --> V1
-    R --> V2
-    R --> V3
-    R --> V4
-    R --> V5
-
-    C1 --> S
-    C2 --> S
-    C3 --> S
-    C5 --> S
-    S --> A
-```
-
-## 2) مخطط تدفق الحجز في التطبيق
-
-هذا المخطط يوضح مسار المستخدم عند حجز خدمة من قائمة الخدمات حتى تأكيد الحجز.
+فيما يلي كود Mermaid يطابق الأسلوب العام للمخطط في الصورة، مع تمثيل المستخدمين على الجانبين ووظائف النظام داخل الصندوق الرئيسي.
 
 ```mermaid
 flowchart LR
-    A[HomeScreen] --> B[اختيار خدمة]
-    B --> C[ServiceDetailsScreen]
-    C --> D[BookingController]
-    D --> E[SelectDateScreen]
-    E --> F[SelectTimeScreen]
-    F --> G[BookingSummaryScreen]
-    G --> H[تأكيد الحجز]
-    H --> I[BookingConfirmedScreen]
-    D --> J[ApiService]
-    J --> K[Backend API]
-    K --> L[تحديث حالة الحجز]
-    L --> I
+    subgraph System[Beauty Salon System]
+        direction TB
+
+        U1["register"]
+        U2["Manage\nprofile"]
+        U3["Browse\nservices"]
+        U4["Book\nAppointment"]
+        U5["Browse\nstore"]
+        U6["Manage\nBookings"]
+        U7["login"]
+        U8["Reset\nPassword"]
+        U9["View\nSchedule"]
+        U10["Update\nBooking\nStatus"]
+        U11["Manage\nprofile"]
+        U12["Manage\nWorker"]
+        U13["Manage\nServices"]
+        U14["Manage\nstore"]
+        U15["view Profiles\nand Reports"]
+        U16["Checkout"]
+        U17["Add to\ncart"]
+        U18["AI image\nanalysis"]
+        U19["Check 2 Hour\npolicy"]
+    end
+
+    Customer((customer))
+    Worker((worker))
+    Admin((admin))
+
+    Customer --> U1
+    Customer --> U2
+    Customer --> U3
+    Customer --> U4
+    Customer --> U5
+    Customer --> U6
+    Customer --> U7
+    Customer --> U8
+    Customer --> U9
+    Customer --> U10
+    Customer --> U16
+    Customer --> U17
+    Customer --> U18
+
+    U3 -. extends .-> U18
+    U4 -. includes .-> U19
+    U17 -. includes .-> U16
+    U7 -. extends .-> U8
+    U9 -. extends .-> U10
+
+    Worker --> U9
+    Worker --> U10
+    Worker --> U11
+
+    Admin --> U12
+    Admin --> U13
+    Admin --> U14
+    Admin --> U15
+
+    U12 -. extends .-> U13
+    U13 -. extends .-> U14
+    U15 -. extends .-> U12
+
+    classDef actor fill:#fff,stroke:#000,stroke-width:2px,color:#000;
+    classDef usecase fill:#fff,stroke:#000,stroke-width:1.5px,color:#000;
+
+    class Customer,Worker,Admin actor;
+    class U1,U2,U3,U4,U5,U6,U7,U8,U9,U10,U11,U12,U13,U14,U15,U16,U17,U18,U19 usecase;
 ```
 
-## 3) مخطط التسلسل للحصول على قائمة الخدمات
-
-هذا المخطط يوضح كيف يتم جلب قائمة الخدمات من الخادم وتحديث واجهة المستخدم عبر GetX.
-
-```mermaid
-sequenceDiagram
-    participant User
-    participant HomeScreen
-    participant HomeController
-    participant ApiService
-    participant Backend
-
-    User->>HomeScreen: فتح الشاشة الرئيسية
-    HomeScreen->>HomeController: onInit()
-    HomeController->>ApiService: get('/services')
-    ApiService->>Backend: طلب قائمة الخدمات
-    Backend-->>ApiService: JSON من الخدمات
-    ApiService-->>HomeController: البيانات المستلمة
-    HomeController->>HomeController: تحديث observable list
-    HomeController-->>HomeScreen: Rebuild UI
-    HomeScreen-->>User: عرض الخدمات والعروض
-```
-
-## 4) مخطط الصفوف لأهم النماذج والـ Controllers
-
-```mermaid
-classDiagram
-    class GetxController
-    class AuthController extends GetxController {
-        +currentUser
-        +isLoading
-        +createAccount()
-        +verifySignupCode()
-        +login()
-    }
-
-    class BookingController extends GetxController {
-        +selectedService
-        +selectedDate
-        +selectedTime
-        +submitBooking()
-    }
-
-    class FavoriteController extends GetxController {
-        +favoriteList
-        +toggleFavorite()
-    }
-
-    class AdminController extends GetxController {
-        +services
-        +bookings
-        +addService()
-        +updateService()
-    }
-
-    class UserModel {
-        +id
-        +name
-        +email
-        +phone
-        +fromJson()
-    }
-
-    class ServiceModel {
-        +id
-        +serviceName
-        +categoryName
-        +price
-        +rating
-        +fromJson()
-    }
-
-    class AppRoutes {
-        +loginScreen
-        +mainScreen
-        +serviceDetails
-        +bookingSummary
-        +adminDashboard
-    }
-
-    AuthController --> UserModel
-    BookingController --> ServiceModel
-    FavoriteController --> ServiceModel
-    AdminController --> ServiceModel
-    AppRoutes --> "getPages"
-```
-
-## 5) ملاحظات عن التنفيذ في المشروع
-
-- تم استخدام `GetMaterialApp` في `main.dart` لتحديد إعدادات التطبيق العالمية.
-- تم تعريف المسارات في `app_pages.dart` باستخدام `GetPage`.
-- تم تسجيل الاعتماديات الأساسية في `bindings/initial_bindings.dart`.
-- تستخدم الشاشات `Get.put()` و `Get.lazyPut()` وفق الحاجة.
-- يتم استخدام `Rx` لإعادة بناء الواجهة عند تغيير الحالة.
-
-## الخلاصة
-
-تضمن هذه البنية تطبيقاً قابلًا للتطوير ومرنًا في إدارة الحالة، مع فواصل واضحة بين الشاشات، المنطق، والبيانات. هذا يسهّل إضافة ميزات جديدة مثل الحجز، الإدارة، المفضلة، أو المراسلات داخل التطبيق دون الحاجة لتغيير هيكل التطبيق بشكل كبير.
+## ملاحظات
+- هذا المخطط يوضح حالات الاستخدام الأساسية للمشروع.
+- تم حساب العلاقات بشكل عام لتقريب أسلوب الصورة، مع وجود `extends` و `includes` لتوضيح العلاقة بين الحالات.
+- إذا أردت، أستطيع تعديل هذا الكود ليصبح أقرب إلى الصورة بشكل أكثر دقة من ناحية الترتيب والحجم أو تحويله إلى نسخة عربية/إنجليزية كاملة.
